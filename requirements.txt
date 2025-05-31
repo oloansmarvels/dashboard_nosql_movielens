@@ -1,6 +1,7 @@
 streamlit
-matplotlib
-pandas
-altair
 pymongo
+pandas
+matplotlib
+altair
 cassandra-driver
+certifi
