@@ -65,13 +65,13 @@ def drop_all_mongo_indexes(except_id=True):
         mongo_collection.drop_index(name)
 
 def create_mongo_compound_index():
-    mongo_collection.create_index([("genres", 1), ("title", 1)])
+    mongo_collection.create_index("genres")
 
 def create_cassandra_index():
-    cassandra_session.execute("CREATE INDEX IF NOT EXISTS idx_movieId ON ratings (movieId)")
+    cassandra_session.execute("CREATE INDEX IF NOT EXISTS idx_rating ON ratings (rating)")
 
 def drop_cassandra_index():
-    cassandra_session.execute("DROP INDEX IF EXISTS idx_movieId")
+    cassandra_session.execute("DROP INDEX IF EXISTS idx_rating")
 
 def mongo_query(indexed=False):
     drop_all_mongo_indexes()
