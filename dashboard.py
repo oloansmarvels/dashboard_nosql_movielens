@@ -58,6 +58,7 @@ def get_cassandra_data(limit=10, min_rating=None):
     rows = cassandra_session.execute(base_query)
     return pd.DataFrame(rows)
 
+# -------------------- Fungsi MongoDB --------------------
 def drop_all_mongo_indexes(except_id=True):
     for name in mongo_collection.index_information():
         if except_id and name == '_id_':
@@ -65,13 +66,7 @@ def drop_all_mongo_indexes(except_id=True):
         mongo_collection.drop_index(name)
 
 def create_mongo_compound_index():
-    mongo_collection.create_index("genres")
-
-def create_cassandra_index():
-    cassandra_session.execute("CREATE INDEX IF NOT EXISTS idx_rating ON ratings (rating)")
-
-def drop_cassandra_index():
-    cassandra_session.execute("DROP INDEX IF EXISTS idx_rating")
+    mongo_collection.create_index([("genres", 1), ("title", 1)])
 
 def mongo_query(indexed=False):
     drop_all_mongo_indexes()
@@ -85,6 +80,13 @@ def mongo_query(indexed=False):
         doc.pop('_id', None)
     return results, round(end - start, 4)
 
+# -------------------- Fungsi Cassandra --------------------
+def create_cassandra_index():
+    cassandra_session.execute("CREATE INDEX IF NOT EXISTS idx_movieId ON ratings (movieId)")
+
+def drop_cassandra_index():
+    cassandra_session.execute("DROP INDEX IF EXISTS idx_movieId")
+
 def cassandra_query(indexed=False):
     if indexed:
         create_cassandra_index()
@@ -96,28 +98,35 @@ def cassandra_query(indexed=False):
     end = time.time()
     return list(rows), query, round(end - start, 4)
 
+# -------------------- Fungsi Gabungan --------------------
 def combined_query(indexed_mongo=False, indexed_cassandra=False):
     drop_all_mongo_indexes()
     if indexed_mongo:
         mongo_collection.create_index("movieId")
+
     if indexed_cassandra:
         create_cassandra_index()
     else:
         drop_cassandra_index()
+
     start_time = time.time()
+
     q1 = "SELECT userId, count(*) as cnt FROM ratings GROUP BY userId ALLOW FILTERING"
     users = cassandra_session.execute(q1)
     top_user = max(users, key=lambda x: x.cnt, default=None)
     if not top_user:
         return None, None, None, q1, {}, round(time.time() - start_time, 4)
+
     q2 = f"SELECT movieId, count(*) as cnt FROM ratings WHERE userId = {top_user.userid} GROUP BY movieId ALLOW FILTERING"
     movies = cassandra_session.execute(q2)
     top_movie = max(movies, key=lambda x: x.cnt, default=None)
     if not top_movie:
         return top_user.userid, None, None, q2, {}, round(time.time() - start_time, 4)
+
     detail = list(mongo_collection.find({"movieId": top_movie.movieid}).limit(1))
     if detail:
         detail[0].pop('_id', None)
+
     return top_user.userid, top_movie.movieid, detail[0] if detail else {}, q2, {"movieId": top_movie.movieid}, round(time.time() - start_time, 4)
 
 def plot_genre_distribution():
@@ -329,10 +338,11 @@ elif page == "CRUD Cassandra":
         except Exception as e:
             st.error(f"Gagal mencari data rating: {e}")
 
-
+# -------------------- Halaman MongoDB Query --------------------
 elif page == "MongoDB Query":
     st.title("MongoDB Query dan Indexing")
-    st.code("db.movies.find({ genres: { $in: [...] } }).sort({title: 1}).limit(500)", language="javascript")
+    st.code('db.movies.find({ genres: "Comedy" }).sort({title: 1}).limit(100)', language="javascript")
+    
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Tanpa Index")
@@ -344,10 +354,11 @@ elif page == "MongoDB Query":
         data, t2 = mongo_query(indexed=True)
         st.dataframe(pd.DataFrame(data), use_container_width=True)
         st.success(f"Waktu: {t2}s")
-
+# -------------------- Halaman Cassandra Query --------------------
 elif page == "Cassandra Query":
     st.title("Cassandra Query dan Indexing")
-    st.code("SELECT * FROM ratings WHERE rating = 4.0 ALLOW FILTERING", language="sql")
+    st.code("SELECT * FROM ratings WHERE rating = 5.0 ALLOW FILTERING", language="sql")
+
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Tanpa Index")
@@ -362,8 +373,10 @@ elif page == "Cassandra Query":
         st.dataframe(pd.DataFrame(rows), use_container_width=True)
         st.success(f"Waktu: {t2}s")
 
+# -------------------- Halaman Gabungan --------------------
 elif page == "Gabungan":
     st.title("Query Gabungan MongoDB + Cassandra")
+
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Tanpa Index")
@@ -380,8 +393,10 @@ elif page == "Gabungan":
         st.json(detail)
         st.success(f"Waktu: {t}s")
 
+# -------------------- Halaman Ringkasan Waktu --------------------
 elif page == "Ringkasan Waktu":
     st.title("Ringkasan Waktu Eksekusi Query")
+    
     _, t_mongo_no = mongo_query(False)
     _, t_mongo_yes = mongo_query(True)
     _, _, t_cass_no = cassandra_query(False)
@@ -395,6 +410,7 @@ elif page == "Ringkasan Waktu":
         "Waktu (detik)": [t_mongo_no, t_mongo_yes, t_cass_no, t_cass_yes, t_comb_no, t_comb_yes]
     }
     df_time = pd.DataFrame(data)
+
     st.markdown("### Ringkasan Waktu Eksekusi per Database")
     for db in df_time['Database'].unique():
         st.subheader(f"{db}")
