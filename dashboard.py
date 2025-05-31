@@ -17,7 +17,7 @@ st.set_page_config(page_title="Dashboard MongoDB & Cassandra", layout="wide")
 mongo_client = MongoClient("mongodb+srv://oloansmarvels:<db_password>@cluster0.1ae0dxs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 mongo_db = mongo_client["movielens"]
 mongo_collection = mongo_db["movies"]
-# ASTRA DB connection
+# ASTRA DB connection 
 cloud_config = {
     'secure_connect_bundle': 'secure-connect-movielens.zip'
 }
