@@ -6,17 +6,36 @@ from pymongo import MongoClient
 from cassandra.cluster import Cluster
 import altair as alt
 import json
+from cassandra.auth import PlainTextAuthProvider
+import os
 
 # ------------------------- Konfigurasi Halaman -------------------------
 st.set_page_config(page_title="Dashboard MongoDB & Cassandra", layout="wide")
 
 # ------------------------- Koneksi DB -------------------------
-mongo_client = MongoClient("mongodb://localhost:27017")
+# 1. Cek versi Python dan OpenSSL
+python --version
+python -c "import ssl; print(ssl.OPENSSL_VERSION)"
+
+# 2. Update pymongo
+pip install --upgrade pymongo
+
+# 3. Coba buat virtualenv baru
+python -m venv venv
+source venv/Scripts/activate  # atau source venv/bin/activate di Linux/Mac
+pip install pymongo
+
+mongo_client = MongoClient("mongodb+srv://oloansmarvels:<db_password>@cluster0.1ae0dxs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 mongo_db = mongo_client["movielens"]
 mongo_collection = mongo_db["movies"]
+# ASTRA DB connection
+cloud_config = {
+    'secure_connect_bundle': 'secure-connect-movielens.zip'
+}
 
-cassandra_cluster = Cluster(['127.0.0.1'])
-cassandra_session = cassandra_cluster.connect('movielens')
+auth_provider = PlainTextAuthProvider('DGZxvpXmKIsklDlsSgfBZrHx', 'ZWSlg8qT.ItZFxdh+kp4PX8Wqk.8NsCws_BNxfbGNsIsZKrjlmU6Y-0OSXCzKwoLb0UyEi4gkDDYa-kZnCtN+XeHcTQiDqZJAiMcTKFtT9HZMil4bhmqi+wcBaYGJS.J')
+cluster = Cluster(cloud=cloud_config, auth_provider=auth_provider)
+session = cluster.connect('movielens')
 
 # ------------------------- Fungsi Utilitas -------------------------
 def get_all_genres():
