@@ -24,7 +24,7 @@ cloud_config = {
 
 auth_provider = PlainTextAuthProvider('DGZxvpXmKIsklDlsSgfBZrHx', 'ZWSlg8qT.ItZFxdh+kp4PX8Wqk.8NsCws_BNxfbGNsIsZKrjlmU6Y-0OSXCzKwoLb0UyEi4gkDDYa-kZnCtN+XeHcTQiDqZJAiMcTKFtT9HZMil4bhmqi+wcBaYGJS.J')
 cluster = Cluster(cloud=cloud_config, auth_provider=auth_provider)
-session = cluster.connect('movielens')
+cassandra_session = cluster.connect('movielens')
 
 # ------------------------- Fungsi Utilitas -------------------------
 def get_all_genres():
