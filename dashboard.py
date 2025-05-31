@@ -22,7 +22,7 @@ username = "oloansmarvels"
 password = quote_plus("marvelmandaadiba")  # encode jika perlu
 uri = f"mongodb+srv://{username}:{password}@cluster0.1ae0dxs.mongodb.net/?retryWrites=true&w=majority"
 
-client = pymongo.MongoClient(uri, tls=True, tlsCAFile=certifi.where())
+client = pymongo.MongoClient(uri)
 db = client["movielens"]
 
 print(db.list_collection_names())
