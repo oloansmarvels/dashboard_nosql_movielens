@@ -2,7 +2,7 @@ import pymongo
 import certifi
 
 username = "oloansmarvels"
-password = quote_plus("marvelmandaadiba")  # encode jika perlu
+password = "marvelmandaadiba"
 uri = f"mongodb+srv://{username}:{password}@cluster0.1ae0dxs.mongodb.net/?retryWrites=true&w=majority"
 
 try:
