@@ -14,7 +14,9 @@ st.set_page_config(page_title="Dashboard MongoDB & Cassandra", layout="wide")
 
 # ------------------------- Koneksi DB ------------------------
 
-mongo_client = MongoClient("mongodb+srv://oloansmarvels:<db_password>@cluster0.1ae0dxs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+mongo_client = pymongo.MongoClient(
+    "mongodb+srv://<username>:<password>@ac-xhczaoj.mongodb.net/?retryWrites=true&w=majority&tls=true"
+)
 mongo_db = mongo_client["movielens"]
 mongo_collection = mongo_db["movies"]
 # ASTRA DB connection 
