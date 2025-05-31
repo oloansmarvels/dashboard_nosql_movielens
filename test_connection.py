@@ -1,7 +1,9 @@
 import pymongo
 import certifi
 
-uri = "mongodb+srv://<username>:<password>@cluster0.xxxxxx.mongodb.net/?retryWrites=true&w=majority"
+username = "oloansmarvels"
+password = quote_plus("marvelmandaadiba")  # encode jika perlu
+uri = f"mongodb+srv://{username}:{password}@cluster0.1ae0dxs.mongodb.net/?retryWrites=true&w=majority"
 
 try:
     client = pymongo.MongoClient(uri, tls=True, tlsCAFile=certifi.where())
