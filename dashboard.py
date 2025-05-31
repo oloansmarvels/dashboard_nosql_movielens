@@ -16,7 +16,7 @@ st.set_page_config(page_title="Dashboard MongoDB & Cassandra", layout="wide")
 # ------------------------- Koneksi DB ------------------------
 
 mongo_client = pymongo.MongoClient(
-    "mongodb+srv://<oloansmarvels>:<marvelmandaadiba>@ac-xhczaoj.mongodb.net/?retryWrites=true&w=majority&tls=true"
+    "mongodb+srv://oloansmarvels:<marvelmandaadiba>@cluster0.1ae0dxs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 )
 mongo_db = mongo_client["movielens"]
 mongo_collection = mongo_db["movies"]
