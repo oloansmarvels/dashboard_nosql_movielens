@@ -19,7 +19,7 @@ import certifi
 from urllib.parse import quote_plus
 
 username = "oloansmarvels"
-password = quote_plus("marvelmandaadiba")  # encode jika perlu
+password = "marvelmandaadiba"
 uri = f"mongodb+srv://{username}:{password}@cluster0.1ae0dxs.mongodb.net/?retryWrites=true&w=majority"
 
 client = pymongo.MongoClient(uri)
