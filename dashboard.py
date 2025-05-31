@@ -14,12 +14,19 @@ import os
 st.set_page_config(page_title="Dashboard MongoDB & Cassandra", layout="wide")
 
 # ------------------------- Koneksi DB ------------------------
+import pymongo
+import certifi
+from urllib.parse import quote_plus
 
-mongo_client = pymongo.MongoClient(
-    "mongodb+srv://oloansmarvels:<marvelmandaadiba>@cluster0.1ae0dxs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-)
-mongo_db = mongo_client["movielens"]
-mongo_collection = mongo_db["movies"]
+username = "oloansmarvels"
+password = quote_plus("marvelmandaadiba")  # encode jika perlu
+uri = f"mongodb+srv://{username}:{password}@cluster0.1ae0dxs.mongodb.net/?retryWrites=true&w=majority"
+
+client = pymongo.MongoClient(uri, tls=True, tlsCAFile=certifi.where())
+db = client["movielens"]
+
+print(db.list_collection_names())
+
 # ASTRA DB connection 
 cloud_config = {
     'secure_connect_bundle': 'secure-connect-movielens.zip'
