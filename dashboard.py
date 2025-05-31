@@ -527,7 +527,7 @@ elif page == "Input Query Gabungan":
                 merged_df = pd.merge(df_cass, df_mongo, on="movieId", how="inner")
                 st.subheader("Hasil Gabungan berdasarkan movieId")
                 st.dataframe(merged_df, use_container_width=True)
-            else:
+            else: 
                 st.warning("Kolom 'movieId' tidak ditemukan di salah satu hasil query.")
         except Exception as e:
             st.error(f"Error saat menggabungkan data: {e}")
