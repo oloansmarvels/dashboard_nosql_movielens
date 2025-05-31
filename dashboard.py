@@ -22,10 +22,9 @@ username = "oloansmarvels"
 password = "marvelmandaadiba"
 uri = f"mongodb+srv://{username}:{password}@cluster0.1ae0dxs.mongodb.net/?retryWrites=true&w=majority"
 
-client = pymongo.MongoClient(uri)
-db = client["movielens"]
-
-print(db.list_collection_names())
+mongo_client = pymongo.MongoClient(uri, tlsCAFile=certifi.where())
+mongo_db = mongo_client["movielens"]
+mongo_collection = mongo_db["movies"]
 
 # ASTRA DB connection 
 cloud_config = {
