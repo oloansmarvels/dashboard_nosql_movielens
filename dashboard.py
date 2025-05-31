@@ -534,4 +534,4 @@ elif page == "Input Query Gabungan":
 
 # ------------------------- Footer -------------------------
 st.markdown("---")
-st.caption("© 2025 Kelompok Marvel | Amanda | Adiba | DS-46-02 ROBD")
+st.caption("© 2025 Marvel | Amanda | Adiba | DS-46-02 | ROBD")
