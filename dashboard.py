@@ -12,18 +12,7 @@ import os
 # ------------------------- Konfigurasi Halaman -------------------------
 st.set_page_config(page_title="Dashboard MongoDB & Cassandra", layout="wide")
 
-# ------------------------- Koneksi DB -------------------------
-# 1. Cek versi Python dan OpenSSL
-python --version
-python -c "import ssl; print(ssl.OPENSSL_VERSION)"
-
-# 2. Update pymongo
-pip install --upgrade pymongo
-
-# 3. Coba buat virtualenv baru
-python -m venv venv
-source venv/Scripts/activate  # atau source venv/bin/activate di Linux/Mac
-pip install pymongo
+# ------------------------- Koneksi DB ------------------------
 
 mongo_client = MongoClient("mongodb+srv://oloansmarvels:<db_password>@cluster0.1ae0dxs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 mongo_db = mongo_client["movielens"]
