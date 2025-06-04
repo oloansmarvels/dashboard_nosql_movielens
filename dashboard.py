@@ -418,7 +418,6 @@ elif page == "Ringkasan Waktu":
         df_sub = df_sub.set_index('Indexing')[['Waktu (detik)']]
         st.table(df_sub.style.format("{:.4f}"))
 
-
 elif page == "Input Query":
     st.title("Input Query")
 
@@ -448,8 +447,15 @@ elif page == "Input Query":
                         st.dataframe(df, use_container_width=True)
 
                     elif mongo_op == "insert_one":
-                        mongo_collection.insert_one(query_dict)
-                        st.success("Dokumen berhasil disisipkan.")
+                        if "movieId" not in query_dict:
+                            st.error("Field 'movieId' wajib ada untuk pengecekan duplikat.")
+                        else:
+                            existing = mongo_collection.find_one({"movieId": query_dict["movieId"]})
+                            if existing:
+                                st.warning(f"movieId {query_dict['movieId']} sudah ada. Gunakan update jika ingin mengubah.")
+                            else:
+                                mongo_collection.insert_one(query_dict)
+                                st.success("Dokumen berhasil disisipkan.")
 
                     elif mongo_op == "update_one":
                         result = mongo_collection.update_one(query_dict, update_dict)
@@ -469,29 +475,56 @@ elif page == "Input Query":
         st.subheader("Cassandra")
         cassandra_op = st.selectbox("Pilih Operasi Cassandra", ["SELECT", "INSERT", "UPDATE", "DELETE"])
 
-        # Sediakan query template berdasarkan operasi
         if cassandra_op == "SELECT":
             cql_query = st.text_area("Masukkan SELECT Query:", value="SELECT * FROM ratings LIMIT 10;")
         elif cassandra_op == "INSERT":
-            cql_query = st.text_area("Masukkan INSERT Query:", value="INSERT INTO ratings (user_id, movie_id, rating) VALUES (1, 101, 4.5);")
-        elif cassandra_op == "UPDATE":
-            cql_query = st.text_area("Masukkan UPDATE Query:", value="UPDATE ratings SET rating = 5.0 WHERE user_id = 1 AND movie_id = 101;")
-        elif cassandra_op == "DELETE":
-            cql_query = st.text_area("Masukkan DELETE Query:", value="DELETE FROM ratings WHERE user_id = 1 AND movie_id = 101;")
+            user_id = st.number_input("User ID", value=1)
+            movie_id = st.number_input("Movie ID", value=101)
+            rating = st.number_input("Rating", value=4.5)
+            timestamp = st.number_input("Timestamp (optional)", value=0)
+            check_pk = st.button("Cek Apakah Sudah Ada")
 
-        if st.button("Jalankan Cassandra"):
-            try:
-                with st.spinner("Menjalankan query Cassandra..."):
-                    if cassandra_op == "SELECT":
-                        rows = cassandra_session.execute(cql_query)
-                        df = pd.DataFrame(rows)
-                        st.dataframe(df, use_container_width=True)
+            if check_pk:
+                try:
+                    check_query = f"SELECT * FROM ratings WHERE user_id = {user_id} AND movie_id = {movie_id};"
+                    existing = cassandra_session.execute(check_query)
+                    if existing.one():
+                        st.warning(f"Data dengan user_id={user_id} dan movie_id={movie_id} sudah ada.")
                     else:
-                        cassandra_session.execute(cql_query)
-                        st.success(f"Query {cassandra_op} berhasil dijalankan.")
-            except Exception as e:
-                st.error(f"Error saat menjalankan query Cassandra: {e}")
-            
+                        st.success("Primary key belum pernah digunakan. Aman untuk insert.")
+                except Exception as e:
+                    st.error(f"Error saat pengecekan: {e}")
+
+            if st.button("Insert ke Cassandra"):
+                try:
+                    check_query = f"SELECT * FROM ratings WHERE user_id = {user_id} AND movie_id = {movie_id};"
+                    existing = cassandra_session.execute(check_query)
+                    if existing.one():
+                        st.warning(f"Data user_id={user_id} dan movie_id={movie_id} sudah ada.")
+                    else:
+                        insert_query = f"""
+                            INSERT INTO ratings (user_id, movie_id, rating{', timestamp' if timestamp > 0 else ''})
+                            VALUES ({user_id}, {movie_id}, {rating}{', ' + str(int(timestamp)) if timestamp > 0 else ''});
+                        """
+                        cassandra_session.execute(insert_query)
+                        st.success("Data berhasil disisipkan.")
+                except Exception as e:
+                    st.error(f"Error saat INSERT: {e}")
+
+        else:
+            cql_query = st.text_area(f"Masukkan {cassandra_op} Query:",
+                value=(
+                    "UPDATE ratings SET rating = 5.0 WHERE user_id = 1 AND movie_id = 101;" if cassandra_op == "UPDATE"
+                    else "DELETE FROM ratings WHERE user_id = 1 AND movie_id = 101;"
+                )
+            )
+            if st.button(f"Jalankan {cassandra_op}"):
+                try:
+                    cassandra_session.execute(cql_query)
+                    st.success(f"Query {cassandra_op} berhasil dijalankan.")
+                except Exception as e:
+                    st.error(f"Error saat menjalankan query Cassandra: {e}")
+
 elif page == "Input Query Gabungan":
     st.title("Input Query Gabungan MongoDB + Cassandra (Agregasi)")
 
