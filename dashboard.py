@@ -418,35 +418,79 @@ elif page == "Ringkasan Waktu":
         df_sub = df_sub.set_index('Indexing')[['Waktu (detik)']]
         st.table(df_sub.style.format("{:.4f}"))
 
+
 elif page == "Input Query":
     st.title("Input Query")
 
     tab1, tab2 = st.tabs(["MongoDB", "Cassandra"])
 
+    # ===== MongoDB CRUD Tab =====
     with tab1:
         st.subheader("MongoDB")
-        query_str = st.text_area("Masukkan MongoDB Query (JSON):", value='{"genres": "Comedy"}')
-        try:
-            mongo_query_dict = eval(query_str)
-            with st.spinner("Menjalankan query..."):
-                results = list(mongo_collection.find(mongo_query_dict).limit(100))
-                for r in results:
-                    r.pop('_id', None)
-                df = pd.DataFrame(results)
-                st.dataframe(df, use_container_width=True)
-        except Exception as e:
-            st.error(f"Error saat menjalankan query MongoDB: {e}")
+        mongo_op = st.selectbox("Pilih Operasi MongoDB", ["find", "insert_one", "update_one", "delete_one"])
+        query_str = st.text_area("Masukkan Query (JSON):", value='{"genres": "Comedy"}')
 
+        update_str = None
+        if mongo_op == "update_one":
+            update_str = st.text_area("Masukkan Update (JSON):", value='{"$set": {"genres": "Drama"}}')
+
+        if st.button("Jalankan MongoDB"):
+            try:
+                query_dict = json.loads(query_str)
+                update_dict = json.loads(update_str) if update_str else None
+
+                with st.spinner("Menjalankan query MongoDB..."):
+                    if mongo_op == "find":
+                        results = list(mongo_collection.find(query_dict).limit(100))
+                        for r in results:
+                            r.pop('_id', None)
+                        df = pd.DataFrame(results)
+                        st.dataframe(df, use_container_width=True)
+
+                    elif mongo_op == "insert_one":
+                        mongo_collection.insert_one(query_dict)
+                        st.success("Dokumen berhasil disisipkan.")
+
+                    elif mongo_op == "update_one":
+                        result = mongo_collection.update_one(query_dict, update_dict)
+                        st.success(f"Matched: {result.matched_count}, Modified: {result.modified_count}")
+
+                    elif mongo_op == "delete_one":
+                        result = mongo_collection.delete_one(query_dict)
+                        st.success(f"Dokumen yang dihapus: {result.deleted_count}")
+
+            except json.JSONDecodeError as je:
+                st.error(f"Format JSON tidak valid: {je}")
+            except Exception as e:
+                st.error(f"Error saat menjalankan operasi MongoDB: {e}")
+
+    # ===== Cassandra CRUD Tab =====
     with tab2:
         st.subheader("Cassandra")
-        cql_query = st.text_area("Masukkan CQL Query:", value="SELECT * FROM ratings LIMIT 10;")
-        try:
-            with st.spinner("Menjalankan query..."):
-                rows = cassandra_session.execute(cql_query)
-                df = pd.DataFrame(rows)
-                st.dataframe(df, use_container_width=True)
-        except Exception as e:
-            st.error(f"Error saat menjalankan query Cassandra: {e}")
+        cassandra_op = st.selectbox("Pilih Operasi Cassandra", ["SELECT", "INSERT", "UPDATE", "DELETE"])
+
+        # Sediakan query template berdasarkan operasi
+        if cassandra_op == "SELECT":
+            cql_query = st.text_area("Masukkan SELECT Query:", value="SELECT * FROM ratings LIMIT 10;")
+        elif cassandra_op == "INSERT":
+            cql_query = st.text_area("Masukkan INSERT Query:", value="INSERT INTO ratings (user_id, movie_id, rating) VALUES (1, 101, 4.5);")
+        elif cassandra_op == "UPDATE":
+            cql_query = st.text_area("Masukkan UPDATE Query:", value="UPDATE ratings SET rating = 5.0 WHERE user_id = 1 AND movie_id = 101;")
+        elif cassandra_op == "DELETE":
+            cql_query = st.text_area("Masukkan DELETE Query:", value="DELETE FROM ratings WHERE user_id = 1 AND movie_id = 101;")
+
+        if st.button("Jalankan Cassandra"):
+            try:
+                with st.spinner("Menjalankan query Cassandra..."):
+                    if cassandra_op == "SELECT":
+                        rows = cassandra_session.execute(cql_query)
+                        df = pd.DataFrame(rows)
+                        st.dataframe(df, use_container_width=True)
+                    else:
+                        cassandra_session.execute(cql_query)
+                        st.success(f"Query {cassandra_op} berhasil dijalankan.")
+            except Exception as e:
+                st.error(f"Error saat menjalankan query Cassandra: {e}")
             
 elif page == "Input Query Gabungan":
     st.title("Input Query Gabungan MongoDB + Cassandra (Agregasi)")
