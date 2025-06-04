@@ -472,11 +472,11 @@ elif page == "Input Query":
         if cassandra_op == "SELECT":
             cql_query = st.text_area("Masukkan SELECT Query:", value="SELECT * FROM ratings LIMIT 10;")
         elif cassandra_op == "INSERT":
-            cql_query = st.text_area("Masukkan INSERT Query:", value="INSERT INTO ratings (user_id, movie_id, rating) VALUES (1, 101, 4.5);")
+            cql_query = st.text_area("Masukkan INSERT Query:", value="INSERT INTO ratings (userid, movieid, rating) VALUES (9999, 101, 4.5);")
         elif cassandra_op == "UPDATE":
-            cql_query = st.text_area("Masukkan UPDATE Query:", value="UPDATE ratings SET rating = 5.0 WHERE user_id = 1 AND movie_id = 101;")
+            cql_query = st.text_area("Masukkan UPDATE Query:", value="UPDATE ratings SET rating = 5.0 WHERE userid = 9999 AND movie_id = 101;")
         elif cassandra_op == "DELETE":
-            cql_query = st.text_area("Masukkan DELETE Query:", value="DELETE FROM ratings WHERE user_id = 1 AND movie_id = 101;")
+            cql_query = st.text_area("Masukkan DELETE Query:", value="DELETE FROM ratings WHERE userid = 9999 AND movieid = 101;")
 
         if st.button("Jalankan Cassandra"):
             try:
